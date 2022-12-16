@@ -1,6 +1,7 @@
 ﻿using AttendanceUserManagementSystem.API.Authentication;
 using AttendanceUserManagementSystem.API.Repositories;
 using AttendanceUserManagementSystem.API.Resources.DTO;
+using AttendanceUserManagementSystem.API.Resources.Models;
 using AttendanceUserManagementSystem.API.Resources.ResourceParameters;
 using Microsoft.AspNetCore.Mvc;
 
@@ -61,6 +62,38 @@ namespace AttendanceUserManagementSystem.API.Controllers
             }
 
             return BadRequest("User does not exist");
+        }
+
+        [HttpGet("Employee-Info")]
+        public async Task<IActionResult> GetInfo(string employeeCode)
+        {
+            var parameter = new GetUsersResourceParameters();
+
+            parameter.EmployeeCode = employeeCode;
+
+
+            var user = await _userRepository.GetAllUsers(parameter);
+
+            if (user.Count < 1)
+            {
+                return BadRequest("User does not exist");
+            }
+
+            var response = new EmployeeInfoModel();
+
+            foreach (var item in user)
+            {
+                response.EmployeeCode = item.EmployeeCode;
+                response.FirstName = item.FirstName;
+                response.LastName = item.LastName;
+                response.Email = item.Email;
+            }
+
+            
+
+            return Ok(response);
+
+           
         }
 
         [HttpGet("init")]

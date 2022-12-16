@@ -174,7 +174,12 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     query = query.Where(u => u.ActivationStatus == parameters.ActivationStatus);
                 }
 
-                
+                if (parameters.EmployeeCode != null)
+                {
+                    query = query.Where(u => u.EmployeeCode == parameters.EmployeeCode);
+                }
+
+
                 var users = await query.ToListAsync();
 
 
@@ -228,8 +233,6 @@ namespace AttendanceUserManagementSystem.API.Repositories
         {
             try
             {
-
-
 
                 var user = await _applicationDbContext.Users
                 .FirstOrDefaultAsync(u => u.Id == id);

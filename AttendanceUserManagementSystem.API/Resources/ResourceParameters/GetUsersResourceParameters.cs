@@ -6,5 +6,6 @@
         public DateTime? RegistrationStartDate { get; set; }
         public DateTime? RegistrationEndDate { get; set; }
         public string? Role { get; set; }
+        public string? EmployeeCode { get; set; }
     }
 }
