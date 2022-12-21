@@ -79,7 +79,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     await _userManager.AddToRoleAsync(appUser, UserRoles.Admin);
                 }
 
-                if (user.Role == UserRoles.RegularUser)
+                if (user.Role == UserRoles.SuperUSer)
                 {
                     await _userManager.AddToRoleAsync(appUser, UserRoles.SuperUSer);
                 }
