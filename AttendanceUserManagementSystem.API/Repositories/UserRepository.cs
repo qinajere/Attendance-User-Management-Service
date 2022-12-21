@@ -49,7 +49,9 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     ActivationStatus = true,
-                    CreationDate = DateTime.Now
+                    CreationDate = DateTime.Now,
+                    IPAddress = user.IPAddress,
+                    MACAddress = user.MACAddress
 
                 };
 
@@ -199,7 +201,10 @@ namespace AttendanceUserManagementSystem.API.Repositories
                         LastName = user.LastName,
                         FirstName = user.FirstName,
                         EmployeeCode = user.EmployeeCode,
-                        Role = userRoles[0]
+                        Role = userRoles[0],
+                        MACAddress = user.MACAddress,
+                        IPAddress = user.IPAddress,
+                        AddressAuthenticationExemption = false
 
                     };
 
@@ -282,7 +287,10 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     LastName = "Admin",
                     ActivationStatus = true,
                     CreationDate = DateTime.Now,
-                    EmployeeCode = "1"
+                    EmployeeCode = "1",
+                    MACAddress = "N/A",
+                    IPAddress = "N/A",
+                    AddressAuthenticationExemption = true
 
                 };
 
@@ -318,5 +326,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
             }
            
         }
+
+       
     }
 }

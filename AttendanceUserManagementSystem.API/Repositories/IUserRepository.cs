@@ -11,6 +11,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
         Task<ApplicationUser> GetUserById(string id);
         Task AddUser(RegisterUserDto user);
         Task UpdateUser(ApplicationUser user);
+       
         Task<string> CreateUsername(string firstname, string lastname);
         Task<bool> InitAdmin();
 

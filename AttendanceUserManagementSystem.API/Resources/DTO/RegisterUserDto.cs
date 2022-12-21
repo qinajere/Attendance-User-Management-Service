@@ -7,6 +7,9 @@
         public string EmployeeCode { get; set; }
         public string Role { get; set; }
         public string Email { get; set; }
+        public string IPAddress { get; set; }
+        public string MACAddress { get; set; }
+        public bool AddressAuthenticationExemption { get; set; }
 
     }
 }

@@ -129,6 +129,27 @@ namespace AttendanceUserManagementSystem.API.Controllers
             {
                 upgradeUser.FirstName = upgradeUserDTO.FirstName;
                 upgradeUser.LastName = upgradeUserDTO.LastName;
+                upgradeUser.IPAddress = upgradeUserDTO.IPAddress;
+                upgradeUserDTO.MACAddress = upgradeUserDTO.MACAddress;
+
+                await _userRepository.UpdateUser(upgradeUser);
+
+                return Ok("User has been successfully upgraded");
+            }
+
+            return BadRequest("User does not exist");
+
+        }
+
+        [HttpPut("Excempt-User")]
+        // PUT api/<UserController>/5
+        public async Task<IActionResult> Excempt(string id, ExemptUserDto userDTO)
+        {
+            var upgradeUser = await _userRepository.GetUserById(id);
+
+            if (upgradeUser != null)
+            {
+                upgradeUser.AddressAuthenticationExemption = userDTO.IsExcempted ;
 
                 await _userRepository.UpdateUser(upgradeUser);
 
