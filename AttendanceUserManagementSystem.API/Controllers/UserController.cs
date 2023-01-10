@@ -3,6 +3,8 @@ using AttendanceUserManagementSystem.API.Repositories;
 using AttendanceUserManagementSystem.API.Resources.DTO;
 using AttendanceUserManagementSystem.API.Resources.Models;
 using AttendanceUserManagementSystem.API.Resources.ResourceParameters;
+using AttendanceUserManagementSystem.API.Resources.Responses;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -14,10 +16,13 @@ namespace AttendanceUserManagementSystem.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-        public UserController(IUserRepository userRepository)
+        private readonly IMapper _mapper;
+
+        public UserController(IUserRepository userRepository, IMapper mapper)
         {
 
             _userRepository = userRepository;
+            _mapper = mapper;
         }
         // GET: api/<UserController>
         [HttpGet]
@@ -47,9 +52,66 @@ namespace AttendanceUserManagementSystem.API.Controllers
         }
 
 
+        [HttpGet("Users-Without-Addresses")]
+        public async Task<IActionResult> Get()
+        {
+            var parameters = new GetUsersResourceParameters();
+
+            var users = await _userRepository.GetAllUsers(parameters);
+
+
+            if (users.Count > 0)
+            {
+                var responses = new List<UsersWithoutAddressesResponse>();  
+
+                foreach (var user in users)
+                {
+                    if (user.MACAddress == " " || user.IPAddress == " ")
+                    {
+                        var response = _mapper.Map<UserDto, UsersWithoutAddressesResponse>(user);
+
+                        responses.Add(response);
+
+                    }
+                }
+
+                return Ok(responses);
+
+            }
+
+            return Ok("No users found");
+
+        }
+
+        [HttpPut("Add-Addresses-Range")]
+        public async Task<ActionResult> AddRange(List<AddAddressesDto> addAddresses)
+        {
+
+
+            var userList = new List<ApplicationUser>();   
+
+            foreach (var addAddress in addAddresses)
+            {
+                var user = await _userRepository.GetUserByCode(addAddress.EmployeeCode);
+
+                if (user != null)
+                {
+                    user.MACAddress = addAddress.MACAddress;
+                    user.IPAddress = addAddress.IPAddress;
+
+                    userList.Add(user);
+                }
+            }
+
+            var results = await _userRepository.AddRangeAddresses(userList);
+
+            return Ok(results);
+
+        }
+
         // GET api/<UserController>/5
         [HttpGet("id")]
-        public async Task<IActionResult> Get(string id)
+        public async Task<ActionResult> Get(string id)
         {
 
             var user = await _userRepository.GetUserById(id);
@@ -130,20 +192,20 @@ namespace AttendanceUserManagementSystem.API.Controllers
                 upgradeUser.FirstName = upgradeUserDTO.FirstName;
                 upgradeUser.LastName = upgradeUserDTO.LastName;
                 upgradeUser.IPAddress = upgradeUserDTO.IPAddress;
-                upgradeUserDTO.MACAddress = upgradeUserDTO.MACAddress;
+                upgradeUser.MACAddress = upgradeUserDTO.MACAddress;
 
                 await _userRepository.UpdateUser(upgradeUser);
 
-                return Ok("User has been successfully upgraded");
+                return Ok("User has been successfully updated");
             }
 
             return BadRequest("User does not exist");
 
         }
 
-        [HttpPut("Excempt-User")]
+        [HttpPut("Exempt-User")]
         // PUT api/<UserController>/5
-        public async Task<IActionResult> Excempt(string id, ExemptUserDto userDTO)
+        public async Task<IActionResult> Exempt(string id, ExemptUserDto userDTO)
         {
             var upgradeUser = await _userRepository.GetUserById(id);
 

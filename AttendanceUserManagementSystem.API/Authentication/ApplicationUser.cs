@@ -14,5 +14,11 @@ namespace AttendanceUserManagementSystem.API.Authentication
         public bool ActivationStatus { get; set; }
         public DateTime CreationDate { get; set; }
         public bool AddressAuthenticationExemption { get; set; }
+
+        public Branch Branch { get; set; }
+        public int BranchId { get; set; }
+        public Department Department { get; set; }
+        public int DepartmentId { get; set; }
+
     }
 }

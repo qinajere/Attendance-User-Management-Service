@@ -5,6 +5,7 @@ using AttendanceUserManagementSystem.API.Resources.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Net.NetworkInformation;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -29,7 +30,22 @@ namespace AttendanceUserManagementSystem.API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Post(LoginModel loginModel)
         {
-            var loginResponse = await _authentication.Login(loginModel);
+
+            string mac = "";
+
+
+            foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                PhysicalAddress address = adapter.GetPhysicalAddress();
+                mac = address.ToString();
+            }
+
+            var ip = HttpContext.Connection.RemoteIpAddress.ToString();
+
+
+           
+
+            var loginResponse = await _authentication.Login(loginModel, ip, mac);
 
             return Ok(loginResponse);
         }

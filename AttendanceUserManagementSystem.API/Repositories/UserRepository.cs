@@ -4,6 +4,7 @@ using AttendanceUserManagementSystem.API.Helpers;
 using AttendanceUserManagementSystem.API.Resources.DTO;
 using AttendanceUserManagementSystem.API.Resources.Models;
 using AttendanceUserManagementSystem.API.Resources.ResourceParameters;
+using AttendanceUserManagementSystem.API.Resources.Responses;
 using AttendanceUserManagementSystem.API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,14 +21,18 @@ namespace AttendanceUserManagementSystem.API.Repositories
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSenderService _emailSenderService;
         private readonly IConfiguration _configuration;
+        private readonly IBranchRepository _branchRepository;
+        private readonly IDepartmentRepository _departmentRepository;
 
-        public UserRepository(ApplicationDbContext applicationDbContext, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSenderService emailSenderService,IConfiguration configuration)
+        public UserRepository(ApplicationDbContext applicationDbContext, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSenderService emailSenderService,IConfiguration configuration, IBranchRepository branchRepository, IDepartmentRepository departmentRepository)
         {
             _applicationDbContext = applicationDbContext;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailSenderService = emailSenderService;
             _configuration = configuration;
+            _branchRepository = branchRepository;
+            _departmentRepository = departmentRepository;
         }
         public async Task AddUser(RegisterUserDto user)
         {
@@ -50,8 +55,10 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     LastName = user.LastName,
                     ActivationStatus = true,
                     CreationDate = DateTime.Now,
-                    IPAddress = user.IPAddress,
-                    MACAddress = user.MACAddress
+                    IPAddress = " ",
+                    MACAddress = " ",
+                    BranchId = user.BranchId,
+                    DepartmentId = user.DepartmentId
 
                 };
 
@@ -160,7 +167,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
         {
             try
             {
-                var query = _applicationDbContext.Users
+                var query = _applicationDbContext.Users.Include(x => x.Department).Include(u => u.Branch)
                     .AsQueryable();
 
 
@@ -179,6 +186,16 @@ namespace AttendanceUserManagementSystem.API.Repositories
                 if (parameters.EmployeeCode != null)
                 {
                     query = query.Where(u => u.EmployeeCode == parameters.EmployeeCode);
+                }
+
+                if (parameters.BranchId != null)
+                {
+                    query = query.Where(u => u.BranchId == parameters.BranchId);
+                }
+
+                if (parameters.DepartmentId != null)
+                {
+                    query = query.Where(u => u.BranchId == parameters.DepartmentId);
                 }
 
 
@@ -204,7 +221,11 @@ namespace AttendanceUserManagementSystem.API.Repositories
                         Role = userRoles[0],
                         MACAddress = user.MACAddress,
                         IPAddress = user.IPAddress,
-                        AddressAuthenticationExemption = false
+                        AddressAuthenticationExemption = false,
+                        Branch = user.Branch.BranchName,
+                        Department = user.Department.DepartmentName
+                        
+                        
 
                     };
 
@@ -221,6 +242,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     {
                         usersList.Add(mapUser);
                     }
+
 
                 }
 
@@ -259,6 +281,31 @@ namespace AttendanceUserManagementSystem.API.Repositories
 
         }
 
+        public async Task<ApplicationUser> GetUserByCode(string code)
+        {
+            try
+            {
+
+                var user = await _applicationDbContext.Users
+                .FirstOrDefaultAsync(u => u.EmployeeCode == code);
+
+                if (user == null)
+                {
+                    throw new ArgumentNullException("User does not exist");
+                }
+
+                return user;
+
+            }
+            catch (Exception ex)
+            {
+
+                Log.Error("Failed to get user: " + ex);
+                return null;
+            }
+
+        }
+
         public async Task UpdateUser(ApplicationUser user)
         {
 
@@ -278,6 +325,14 @@ namespace AttendanceUserManagementSystem.API.Repositories
         {
             try
             {
+
+                var initialBranch = new Branch() { BranchName = "initial branch" };
+                var initialDepartment = new Department { DepartmentName = "initial department" };
+
+                await _departmentRepository.AddDepartment(initialDepartment);
+
+                await _branchRepository.AddBranch(initialBranch);
+
                 ApplicationUser adminUser = new ApplicationUser()
                 {
                     Email = "admin@nitel.mw",
@@ -290,7 +345,10 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     EmployeeCode = "1",
                     MACAddress = "N/A",
                     IPAddress = "N/A",
-                    AddressAuthenticationExemption = true
+                    AddressAuthenticationExemption = true,
+                    BranchId = 1,
+                    DepartmentId = 1
+
 
                 };
 
@@ -327,6 +385,25 @@ namespace AttendanceUserManagementSystem.API.Repositories
            
         }
 
+        public async Task<bool> AddRangeAddresses(List<ApplicationUser> users)
+        {
+            try
+            {
        
+                 _applicationDbContext.Users.UpdateRange(users);
+
+                _applicationDbContext.SaveChanges();
+
+                return true;
+               
+
+            }
+            catch (Exception ex)
+            {
+
+                Log.Error("An error occured when creating user: " + ex);
+                return false;
+            }
+        }
     }
 }

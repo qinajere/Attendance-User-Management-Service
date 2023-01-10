@@ -4,8 +4,11 @@ using AttendanceUserManagementSystem.API.Resources.Responses;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+
 
 namespace AttendanceUserManagementSystem.API.Repositories
 {
@@ -23,11 +26,22 @@ namespace AttendanceUserManagementSystem.API.Repositories
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
-        public async Task<LoginResponse> Login(LoginModel loginModel)
+        public async Task<LoginResponse> Login(LoginModel loginModel, string ip, string mac)
         {
             var user = await _userManager.FindByNameAsync(loginModel.UserName);
             if (user != null && user.ActivationStatus && await _userManager.CheckPasswordAsync(user, loginModel.Password))
             {
+
+
+                if (!user.AddressAuthenticationExemption)
+                {
+                    if(user.IPAddress != ip || user.MACAddress != mac )
+                    {
+                        throw new Exception("Failed to Login");
+                    }
+
+                }
+
                 var userRoles = await _userManager.GetRolesAsync(user);
 
 
