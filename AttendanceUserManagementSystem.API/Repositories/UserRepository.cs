@@ -248,7 +248,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
             try
             {
 
-                var user = await _applicationDbContext.Users
+                var user = await _applicationDbContext.Users.Include(u => u.Branch).Include(f => f.Department)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (user == null)
