@@ -12,6 +12,7 @@ namespace AttendanceUserManagementSystem.API.Resources.Mapping
             CreateMap<Branch, BranchResponse>();
             CreateMap<Department, DepartmentResponse>();
             CreateMap<UserDto, UsersWithoutAddressesResponse>();
+            CreateMap<ApplicationUser, UserDto>();
 
         }
     }

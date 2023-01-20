@@ -6,6 +6,7 @@ using AttendanceUserManagementSystem.API.Resources.Models;
 using AttendanceUserManagementSystem.API.Resources.ResourceParameters;
 using AttendanceUserManagementSystem.API.Resources.Responses;
 using AttendanceUserManagementSystem.API.Services;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -23,8 +24,9 @@ namespace AttendanceUserManagementSystem.API.Repositories
         private readonly IConfiguration _configuration;
         private readonly IBranchRepository _branchRepository;
         private readonly IDepartmentRepository _departmentRepository;
+        private readonly IMapper _mapper;
 
-        public UserRepository(ApplicationDbContext applicationDbContext, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSenderService emailSenderService,IConfiguration configuration, IBranchRepository branchRepository, IDepartmentRepository departmentRepository)
+        public UserRepository(ApplicationDbContext applicationDbContext, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSenderService emailSenderService,IConfiguration configuration, IBranchRepository branchRepository, IDepartmentRepository departmentRepository, IMapper mapper)
         {
             _applicationDbContext = applicationDbContext;
             _userManager = userManager;
@@ -33,6 +35,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
             _configuration = configuration;
             _branchRepository = branchRepository;
             _departmentRepository = departmentRepository;
+            _mapper = mapper;
         }
         public async Task AddUser(RegisterUserDto user)
         {
@@ -198,6 +201,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
                     query = query.Where(u => u.BranchId == parameters.DepartmentId);
                 }
 
+                query = query.Where(u => u.ActivationStatus == true);
 
                 var users = await query.ToListAsync();
 
@@ -208,28 +212,11 @@ namespace AttendanceUserManagementSystem.API.Repositories
                 {
                     var userRoles = await _userManager.GetRolesAsync(user);
 
-                    var mapUser = new UserDto()
-                    {
-                        Id = user.Id,
-                        UserName = user.UserName,
-                        ActivationStatus = user.ActivationStatus,
-                        Email = user.Email,
-                        CreationDate = user.CreationDate,
-                        LastName = user.LastName,
-                        FirstName = user.FirstName,
-                        EmployeeCode = user.EmployeeCode,
-                        Role = userRoles[0],
-                        MACAddress = user.MACAddress,
-                        IPAddress = user.IPAddress,
-                        AddressAuthenticationExemption = false,
-                        Branch = user.Branch.BranchName,
-                        Department = user.Department.DepartmentName
-                        
-                        
+                    var mapUser = _mapper.Map<ApplicationUser,UserDto>(user);
 
-                    };
+                    mapUser.Branch = user.Branch.BranchName;
 
-
+                    mapUser.Department = user.Department.DepartmentName;
                     if (parameters.Role != null)
                     {
                         if (mapUser.Role == parameters.Role)
@@ -313,6 +300,7 @@ namespace AttendanceUserManagementSystem.API.Repositories
             {
 
                 var result = await _userManager.UpdateAsync(user);
+                
             }
             catch (Exception)
             {

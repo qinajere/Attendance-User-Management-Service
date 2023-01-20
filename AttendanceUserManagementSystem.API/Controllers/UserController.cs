@@ -116,11 +116,17 @@ namespace AttendanceUserManagementSystem.API.Controllers
 
             var user = await _userRepository.GetUserById(id);
 
+            var mapUser = _mapper.Map<ApplicationUser, UserDto>(user);
+
+            mapUser.Branch = user.Branch.BranchName;
+            mapUser.Department = user.Department.DepartmentName;
+
+
             if (user != null)
             {
 
 
-                return Ok(user);
+                return Ok(mapUser);
             }
 
             return BadRequest("User does not exist");
@@ -149,6 +155,8 @@ namespace AttendanceUserManagementSystem.API.Controllers
                 response.FirstName = item.FirstName;
                 response.LastName = item.LastName;
                 response.Email = item.Email;
+                response.BranchName = item.Branch;
+                response.DepartmentName = item.Department;
             }
 
             
@@ -156,6 +164,46 @@ namespace AttendanceUserManagementSystem.API.Controllers
             return Ok(response);
 
            
+        }
+
+        [HttpGet("Employee-Codes")]
+        public async Task<IActionResult> GetInfo()
+        {
+            var parameter = new GetUsersResourceParameters();
+
+            var users = await _userRepository.GetAllUsers(parameter);
+
+            if (users.Count < 1)
+            {
+                return BadRequest("Users do not exist");
+            }
+
+             users = users.Where(u => u.LastName != "Admin").ToList();
+           
+
+            var responses = new List<EmployeeCodeModel>();
+
+            foreach (var item in users)
+            {
+                var response = new EmployeeCodeModel();
+
+                response.EmployeeCode = item.EmployeeCode;
+                response.BranchName=item.Branch;
+                response.DepartmentName = item.Department;
+                response.Email = item.Email;
+                response.FirstName = item.FirstName;
+                response.LastName = item.LastName;
+                
+
+                responses.Add(response);
+               
+            }
+
+
+
+            return Ok(responses);
+
+
         }
 
         [HttpGet("init")]
